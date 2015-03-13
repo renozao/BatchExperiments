@@ -177,3 +177,33 @@ getResultVars = function(data, type = "group") {
     result = setdiff(colnames(data), c("id", "algo", "prob", "repl", attr(data, "prob.pars.names"), attr(data, "algo.pars.names")))
   )
 }
+
+#' @inheritParams BatchJobs::reduceResultsList
+#' @export 
+reduceResultsExperimentsList <- function(reg, ids, part = NA_character_, fun, ..., use.names = "ids", impute.val, progressbar = TRUE){
+  
+  cache = makeFileCache(use.cache = length(ids) > 1L)
+  .fun <- function(job, res, ...){
+    .applyJobWrapper(reg, job, cache, fun)(res = res, ...)
+  }
+  
+  reduceResultsList(reg, ids, part = part, fun = .fun, ..., use.names = use.names, impute.val = impute.val, progressbar = progressbar)
+   
+}
+
+#' @inheritParams BatchJobs::reduceResultsDataFrame
+#' @export 
+reduceResultsExperimentsDataFrame <- function(reg, ids, part = NA_character_, fun, ...,use.names = "ids", impute.val, strings.as.factors = default.stringsAsFactors()){
+  
+  cache = makeFileCache(use.cache = length(ids) > 1L)
+  .fun <- function(job, res, ...){
+    job_df <- .applyJobWrapper(reg, job, cache, fun)(res = res, ...)
+    param <- c(job$prob.pars, job$algo.pars)
+    param_df <- data.frame(param, stringsAsFactors = strings.as.factors)
+    cbind(param_df, job_df)
+  }
+  
+  res <- reduceResultsList(reg, ids, part = part, fun = .fun, ..., use.names = use.names, impute.val = impute.val)
+  ldply(res, identity, .id = '.jobid')
+  
+}
