@@ -114,3 +114,28 @@ print.Design = function(x, ...) {
   catf("Design for %s with %i row%s", x$id, n, ifelse(n == 1L, "", "s"))
   cat(collapse(sprintf("  %-10s: %s", names(storage), storage), "\n"), "\n")
 }
+
+#' Expands an Algorithm/Problem Design
+#' 
+#' Expands a design parameter grid into an exhaustive \code{data.frame}.
+#' 
+#' @param design a -- list of -- \code{Design} objects.
+#' @return a -- list of -- \code{dara.frame}.
+#' 
+#' @export
+expandDesign <- function(design){
+  
+  if( is(design, 'Design') ) design <- list(design)
+  
+  # iterate along the design
+  res <- lapply(design, function(pd){
+    pd$designIter$reset()
+    ldply(1:pd$designIter$n.states, function(i){
+      as.data.frame(pd$designIter$nextElem())
+    })
+  })
+
+  # simplify if possible
+  if( length(res) == 1L ) res <- res[[1L]]
+  res
+}
