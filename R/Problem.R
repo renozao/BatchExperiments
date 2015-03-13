@@ -82,20 +82,38 @@ loadProblem = function(reg, id, seed = TRUE) {
   prob
 }
 
-calcDynamic = function(reg, job, static, dynamic.fun) {
-  if (is.null(dynamic.fun))
-    return(NULL)
-  prob.use = c("job", "static")
-  prob.use = setNames(prob.use %in% names(formals(dynamic.fun)), prob.use)
-
-  f = switch(sum(c(1L, 2L)[prob.use]) + 1L,
-    function(...) dynamic.fun(...),
-    function(...) dynamic.fun(job = job, ...),
-    function(...) dynamic.fun(static = static, ...),
-    function(...) dynamic.fun(job = job, static = static, ...))
-
-  info("Generating problem %s ...", job$prob.id)
-  seed = BatchJobs:::seeder(reg, job$prob.seed)
-  on.exit(seed$reset())
-  do.call(f, job$prob.pars)
-}
+# use a small cache for speeding identical consecutive calls
+#' @import digest
+calcDynamic = local({
+  .last_value <- NULL
+  .last_hash <- NULL 
+  function(reg, job, static, dynamic.fun) {
+    if (is.null(dynamic.fun))
+      return(NULL)
+    prob.use = c("job", "static")
+    prob.use = setNames(prob.use %in% names(formals(dynamic.fun)), prob.use)
+  
+    f = switch(sum(c(1L, 2L)[prob.use]) + 1L,
+      function(...) dynamic.fun(...),
+      function(...) dynamic.fun(job = job, ...),
+      function(...) dynamic.fun(static = static, ...),
+      function(...) dynamic.fun(job = job, static = static, ...))
+  
+    # compare with last call
+    hash <- digest::digest(list(job$prob.pars, job$prob.seed, digest(static)))
+    if( !identical(hash, .last_hash) ){
+      
+      info("Generating problem %s ...", job$prob.id)
+      seed = BatchJobs:::seeder(reg, job$prob.seed)
+      on.exit(seed$reset())
+      res <- do.call(f, job$prob.pars)
+      
+      # cache last result
+      .last_value <<- res
+      .last_hash <<- hash
+    }
+    
+    .last_value
+    
+  }
+})

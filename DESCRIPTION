@@ -18,7 +18,8 @@ Imports:
     BBmisc (>= 1.8),
     DBI,
     RSQLite (>= 1.0.0),
-    plyr
+    plyr,
+    digest
 Suggests:
     randomForest,
     rpart,
