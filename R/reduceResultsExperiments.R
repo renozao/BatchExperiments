@@ -197,8 +197,8 @@ reduceResultsExperimentsDataFrame <- function(reg, ids, part = NA_character_, fu
   
   cache = makeFileCache(use.cache = length(ids) > 1L)
   .fun <- function(job, res, ...){
-    job_df <- .applyJobWrapper(reg, job, cache, fun)(res = res, ...)
-    param <- c(job$prob.pars, job$algo.pars)
+    job_df <- .applyJobWrapper(reg, job, cache, fun, verbose = FALSE)(res = res, ...)
+    param <- c(.prob.seed = job$prob.seed, .job.seed = job$seed, .repl = job$repl, job$prob.pars, job$algo.pars)
     param_df <- data.frame(param, stringsAsFactors = strings.as.factors)
     cbind(param_df, job_df)
   }
