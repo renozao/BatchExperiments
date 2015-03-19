@@ -15,46 +15,46 @@ designIterator = function(ex, .design = data.frame()) {
     else
       nextState(replace(state, pos, 1L), pos + 1L)
   }
-
+  
   nextElem = function() {
     state <<- nextState(state)
     counter <<- counter + 1L
-
+    
     x = c(as.list(.design[state[! is.ex.state], , drop = FALSE]),
-          mapply(function(n, s) ex[[n]][s], n = names.ex.state, s = state[is.ex.state], SIMPLIFY = FALSE))
+        mapply(function(n, s) ex[[n]][s], n = names.ex.state, s = state[is.ex.state], SIMPLIFY = FALSE))
     x[order(names2(x))]
   }
-
+  
   hasNext = function() {
     counter < counter.max
   }
-
+  
   reset = function() {
     state <<- state.init
     counter <<- 0L
     invisible(TRUE)
   }
-
-
+  
+  
   state.last = sort(setNames(c(vapply(ex, length, 1L), max(nrow(.design), 1L)), c(names(ex), ".design.row")), decreasing = TRUE)
   state.init = setNames(c(0L, rep.int(1L, length(state.last) - 1L)), names(state.last))
   counter.max = prod(state.last)
   if (counter.max > .Machine$integer.max)
     stop("The generated design is too big. Designs with up to ",
-         .Machine$integer.max, " rows are supported!")
+        .Machine$integer.max, " rows are supported!")
   counter.max = as.integer(counter.max)
   is.ex.state = (names(state.init) != ".design.row")
   names.ex.state = names(state.init)[is.ex.state]
-
+  
   state = state.init
   counter = 0L
-
+  
   list(nextElem = nextElem,
-       hasNext = hasNext,
-       reset = reset,
-       n.states = counter.max,
-       storage = c(vapply(.design, storage.mode, character(1L)),
-                   vapply(ex, storage.mode, character(1L))))
+      hasNext = hasNext,
+      reset = reset,
+      n.states = counter.max,
+      storage = c(vapply(.design, storage.mode, character(1L)),
+          vapply(ex, storage.mode, character(1L))))
 }
 
 #' @title Create parameter designs for problems and algorithms.
@@ -123,19 +123,38 @@ print.Design = function(x, ...) {
 #' @return a -- list of -- \code{dara.frame}.
 #' 
 #' @export
-expandDesign <- function(design){
+expandDesign <- function(x, ...){
+  UseMethod('expandDesign')
+}
+
+#' @export
+expandDesign.default <- function(x, ...){
   
+  design <- x 
   if( is(design, 'Design') ) design <- list(design)
   
   # iterate along the design
   res <- lapply(design, function(pd){
-    pd$designIter$reset()
-    ldply(1:pd$designIter$n.states, function(i){
-      as.data.frame(pd$designIter$nextElem())
-    })
-  })
-
+            pd$designIter$reset()
+            ldply(1:pd$designIter$n.states, function(i){
+                    as.data.frame(pd$designIter$nextElem())
+                })
+        })
+  
   # simplify if possible
   if( length(res) == 1L ) res <- res[[1L]]
   res
+}
+
+#' @export
+expandDesign.ExperimentRegistry <- function(x, ids){
+  jobs = getJobs(x, ids = ids, check.ids = FALSE)
+  vars <- setdiff(names(jobs[[1L]]), c('algo.pars', 'prob.pars'))
+  ldply(jobs, function(j) data.frame(expandDesign(j, vars)))
+}
+
+#' @export
+expandDesign.ExperimentJob <- function(x, ...){
+  elmt <- setdiff(names(x), c('algo.pars', 'prob.pars'))
+  c(setNames(x[elmt], paste0('.', elmt)), x$prob.pars, x$algo.pars)
 }
