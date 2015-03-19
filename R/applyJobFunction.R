@@ -1,6 +1,6 @@
 # internal function to define a wrappers for job/reduce functions 
 # that can have optional arguments job, static and dynamic
-.applyJobWrapper = function(reg, job, cache, algo) {
+.applyJobWrapper = function(reg, job, cache, algo, verbose = TRUE) {
   algo.use = c("job", "static", "dynamic")
   algo.use = setNames(algo.use %in% names(formals(algo)), algo.use)
 
@@ -12,7 +12,7 @@
   # "Generating problem[...]", but the actual error is thrown in the algorithm
   parts = getProblemFilePaths(reg$file.dir, job$prob.id)
   static = function() cache(parts["static"], slot = "static", impute = NULL)
-  dynamic = function() calcDynamic(reg, job, static(), cache(parts["dynamic"], slot = "dynamic", impute = NULL))
+  dynamic = function() calcDynamic(reg, job, static(), cache(parts["dynamic"], slot = "dynamic", impute = NULL), verbose = verbose)
 
   # switch on algo formals and apply algorithm function
   f = switch(sum(c(1L, 2L, 4L)[algo.use]) + 1L,
@@ -29,9 +29,11 @@
 
 #' @method applyJobFunction ExperimentRegistry
 #' @export
-applyJobFunction.ExperimentRegistry = function(reg, job, cache) {
-  algo = cache(getAlgorithmFilePath(reg$file.dir, job$algo.id),
-    slot = "algo", parts = "algorithm")$fun
+applyJobFunction.ExperimentRegistry = function(reg, job, cache = makeFileCache(FALSE), fun = NULL) {
+  
+  if( is.null(algo <- fun ) )
+    algo = cache(getAlgorithmFilePath(reg$file.dir, job$algo.id),
+                slot = "algo", parts = "algorithm")$fun
 
   # switch on algo formals and apply algorithm function
   f = .applyJobWrapper(reg, job, cache, algo)

@@ -184,7 +184,7 @@ reduceResultsExperimentsList <- function(reg, ids, part = NA_character_, fun, ..
   
   cache = makeFileCache(use.cache = length(ids) > 1L)
   .fun <- function(job, res, ...){
-    .applyJobWrapper(reg, job, cache, fun)(res = res, ...)
+    .applyJobWrapper(reg, job, cache, fun, verbose = FALSE)(res = res, ...)
   }
   
   reduceResultsList(reg, ids, part = part, fun = .fun, ..., use.names = use.names, impute.val = impute.val, progressbar = progressbar)

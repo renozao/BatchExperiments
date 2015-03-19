@@ -87,7 +87,7 @@ loadProblem = function(reg, id, seed = TRUE) {
 calcDynamic = local({
   .last_value <- NULL
   .last_hash <- NULL 
-  function(reg, job, static, dynamic.fun) {
+  function(reg, job, static, dynamic.fun, verbose = TRUE) {
     if (is.null(dynamic.fun))
       return(NULL)
     prob.use = c("job", "static")
@@ -103,7 +103,7 @@ calcDynamic = local({
     hash <- digest::digest(list(job$prob.pars, job$prob.seed, digest(static)))
     if( !identical(hash, .last_hash) ){
       
-      info("Generating problem %s ...", job$prob.id)
+      if( verbose ) info("Generating problem %s ...", job$prob.id)
       seed = BatchJobs:::seeder(reg, job$prob.seed)
       on.exit(seed$reset())
       res <- do.call(f, job$prob.pars)
