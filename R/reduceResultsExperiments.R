@@ -127,7 +127,7 @@ reduceResultsExperiments = function(reg, ids, part = NA_character_, fun, ...,
   # THEN RESORT WRT TO IDS from call
   # NB: in the for-loop above we potentially changed that order if we used imputing,
   # see lines after id.chunk.done = ...
-  if (nrow(aggr) > 0L) {
+  if (nrow(aggr) > 0L && !anyDuplicated(aggr$id) ) {
     aggr = setRowNames(aggr, aggr$id)
     aggr = aggr[as.character(ids), ]
   }
