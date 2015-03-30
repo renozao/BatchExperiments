@@ -86,6 +86,7 @@ reduceResultsExperimentsParallel = function(reg, ids, part = NA_character_, fun,
   }, init = data.frame(), progressbar = progressbar)
   unlink(reg2$file.dir, recursive = TRUE)
 
+  return(addClasses(res, "ReducedResultsExperiments"))
   rownames(res) = res$id
   return(addClasses(res[as.character(ids),, drop = FALSE], "ReducedResultsExperiments"))
 }
