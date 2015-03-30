@@ -74,7 +74,7 @@ reduceResultsExperimentsParallel = function(reg, ids, part = NA_character_, fun,
     reduceResultsExperiments(reg, ii, part = part, fun = fun,
       block.size = ceiling(length(ii) / 10), strings.as.factors = strings.as.factors,
       impute.val = impute.val, apply.on.missing = apply.on.missing, progressbar = progressbar, ...)
-  }, ch, more.args = more.args, file.dir = file.dir.new)
+  }, ch, more.args = more.args, file.dir = file.dir.new, packages = names(reg$packages))
 
   waitForJobs(reg2, timeout = timeout, stop.on.error = TRUE, progressbar = progressbar)
 
