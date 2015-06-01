@@ -70,6 +70,11 @@ reduceResultsExperimentsParallel = function(reg, ids, part = NA_character_, fun,
 
   # FIXME: Magic constant 10
   reg2 = batchMapQuick(function(reg, ii, fun, part, strings.as.factors, impute.val, ...) {
+        
+    # force re-load registry on slave for packages and dependencies
+    # NB: this will not update the registry 
+    loadRegistry(reg$file.dir)
+    
     # FIXME this synchronizes the registry on the node!
     reduceResultsExperiments(reg, ii, part = part, fun = fun,
       block.size = ceiling(length(ii) / 10), strings.as.factors = strings.as.factors,
